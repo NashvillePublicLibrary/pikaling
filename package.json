@@ -1,0 +1,14 @@
+{
+  "name": "pikaling",
+  "version": "1.0.0",
+  "description": "Make Pika manual ungrouping entries for grouped works with multiple languages",
+  "main": "pikaling.js",
+  "scripts": {
+    "test": "node pikaling"
+  },
+  "keywords": [
+    "Pika"
+  ],
+  "author": "James Staub <james.staub@nashville.gov>",
+  "license": "ISC"
+}
