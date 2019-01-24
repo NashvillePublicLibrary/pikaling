@@ -1,10 +1,102 @@
-const axios = require('axios');
+var SolrNode = require('solr-node');
+var client = new SolrNode({
+	host: 'galacto.library.nashville.org',
+	port: '8180',
+	core: 'grouped',
+	protocol: 'http'
+});
 
-axios.get('http://galacto.library.nashville.org:8180/solr/grouped/select?q=language%3A%2F(English%7CNone%7CUndetermined%7CUnknown)%2F%0Alanguage%3A%2F(Afrikaans%7CAfro-Asiatic%7CAlbanian%7CAmharic%7CAncient%2BGreek%7CArabic%7CAramaic%7CArmenian%7CAzerbaijani%7CBambara%7CBasque%7CBengali%7CBosnian%7CBreton%7CBulgarian%7CBurmese%7CCatalan%7CCatalan%253B%2BValencian%7CCeltic%7CCentral%2BKhmer%7CChamorro%7CChinese%7CChoctaw%7CChurch%2BSlavic%7CChuukese%7CCree%7CCreole%7CCreoles%7CCroatian%7CCzech%7CDanish%7CDutch%7CDyula%7CEfik%7CElamite%7CEstonian%7CEwe%7CFilipino%7CFinnish%7CFrench%7CFulah%7CGeorgian%7CGerman%7CGermanic%7CGreek%7CGujarati%7CHaitian%7CHausa%7CHawaiian%7CHebrew%7CHindi%7CHungarian%7CIcelandic%7CIndonesian%7CInuktitut%7CIrish%7CItalian%7CJapanese%7CJavanese%7CKannada%7CKaren%7CKazakh%7CKinyarwanda%7CKirghiz%7CKorean%7CKurdish%7CLatin%7CLatvian%7CLingala%7CLithuanian%7CMacedonian%7CMalay%7CMalayalam%7CMandingo%7CMaori%7CMarathi%7CMiddle%2BEnglish%7CMongolian%7CMossi%7CMultiple%7CNavajo%7CNepal%2BBhasa%7CNepali%7CNiger-Kordofanian%7CNorth%2BAmerican%2BIndian%7CNorwegian%7CNubian%7COjibwa%7COld%2BEnglish%7COld%2BFrench%7CPampanga%7CPanjabi%7CPedi%7CPersian%7CPolish%7CPortuguese%7CPushto%7CRomanian%7CRomany%7CRussian%7CSamoan%7CSanskrit%7CSign%2BLanguage%7CSlave%7CSlovak%7CSlovenian%7CSomali%7CSonghai%7CSpanish%7CSwahili%7CSwedish%7CSwiss%2BGerman%7CTagalog%7CTamashek%7CTamil%7CTelugu%7CThai%7CTibetan%7CTonga%7CTurkish%7CUkrainian%7CUrdu%7CUzbek%7CVietnamese%7CWelsh%7CWolof%7CXhosa%7CYiddish%7CYoruba%7CZande%7CZaza%7CZulu)%2F%0ANOT+grouping_category%3Amusic&rows=10000&fl=title%2Crecord_details&wt=json&indent=true')
-	.then(response => {
-		console.log(response.data.url);
-		console.log(response.data.explanation);
+var Datastore = require('nedb');
+var db = new Datastore();
+
+var objQuery = client.query()
+	.q('*:*')
+/*
+	.fq({[
+		'language: English',
+		'language: Spanish'
+//		language: '/(English|None|Undetermined|Unknown)/',
+//		language: '/(Afrikaans|Afro-Asiatic|Albanian|Amharic|Ancient+Greek|Arabic|Aramaic|Armenian|Azerbaijani|Bambara|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Catalan%3B+Valencian|Celtic|Central+Khmer|Chamorro|Chinese|Choctaw|Church+Slavic|Chuukese|Cree|Creole|Creoles|Croatian|Czech|Danish|Dutch|Dyula|Efik|Elamite|Estonian|Ewe|Filipino|Finnish|French|Fulah|Georgian|German|Germanic|Greek|Gujarati|Haitian|Hausa|Hawaiian|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Inuktitut|Irish|Italian|Japanese|Javanese|Kannada|Karen|Kazakh|Kinyarwanda|Kirghiz|Korean|Kurdish|Latin|Latvian|Lingala|Lithuanian|Macedonian|Malay|Malayalam|Mandingo|Maori|Marathi|Middle+English|Mongolian|Mossi|Multiple|Navajo|Nepal+Bhasa|Nepali|Niger-Kordofanian|North+American+Indian|Norwegian|Nubian|Ojibwa|Old+English|Old+French|Pampanga|Panjabi|Pedi|Persian|Polish|Portuguese|Pushto|Romanian|Romany|Russian|Samoan|Sanskrit|Sign+Language|Slave|Slovak|Slovenian|Somali|Songhai|Spanish|Swahili|Swedish|Swiss+German|Tagalog|Tamashek|Tamil|Telugu|Thai|Tibetan|Tonga|Turkish|Ukrainian|Urdu|Uzbek|Vietnamese|Welsh|Wolof|Xhosa|Yiddish|Yoruba|Zande|Zaza|Zulu)/'
+//		NOT grouping_category: 'music'
+	]})
+//			fq: "language:/(English|None|Undetermined|Unknown)/,language:/(Spanish)/",
+//				'language:/(Afrikaans|Afro-Asiatic|Albanian|Amharic|Ancient+Greek|Arabic|Aramaic|Armenian|Azerbaijani|Bambara|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Catalan%3B+Valencian|Celtic|Central+Khmer|Chamorro|Chinese|Choctaw|Church+Slavic|Chuukese|Cree|Creole|Creoles|Croatian|Czech|Danish|Dutch|Dyula|Efik|Elamite|Estonian|Ewe|Filipino|Finnish|French|Fulah|Georgian|German|Germanic|Greek|Gujarati|Haitian|Hausa|Hawaiian|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Inuktitut|Irish|Italian|Japanese|Javanese|Kannada|Karen|Kazakh|Kinyarwanda|Kirghiz|Korean|Kurdish|Latin|Latvian|Lingala|Lithuanian|Macedonian|Malay|Malayalam|Mandingo|Maori|Marathi|Middle+English|Mongolian|Mossi|Multiple|Navajo|Nepal+Bhasa|Nepali|Niger-Kordofanian|North+American+Indian|Norwegian|Nubian|Ojibwa|Old+English|Old+French|Pampanga|Panjabi|Pedi|Persian|Polish|Portuguese|Pushto|Romanian|Romany|Russian|Samoan|Sanskrit|Sign+Language|Slave|Slovak|Slovenian|Somali|Songhai|Spanish|Swahili|Swedish|Swiss+German|Tagalog|Tamashek|Tamil|Telugu|Thai|Tibetan|Tonga|Turkish|Ukrainian|Urdu|Uzbek|Vietnamese|Welsh|Wolof|Xhosa|Yiddish|Yoruba|Zande|Zaza|Zulu)/, NOT grouping_category:music'
+	.addParams({
+		indent: true,
 	})
-	.catch(error => {
+*/
+	.fl('id,title,record_details')
+	.rows(100)
+	.wt('json')
+;
+
+client.search(objQuery, function (err, result) {
+   if (err) {
+      console.log(err);
+      return;
+   }
+   console.log(result);
+});
+
+/*
+axios.get('http://galacto.library.nashville.org:8180/solr/grouped/select', {
+		params: {
+// TO DO: make the language query for non-english either (?!English|None|Undetermined|Unknown) or dynamically based on a magic language query
+// see https://trello.com/c/ChUPSdgO/142-pika-foreign-language-support#comment-5c48b1aa15db4b3da7366a6d
+//			q: 'title:hobbit, language:Spanish',
+			q: 'language:/(English|None|Undetermined|Unknown)/, language:/(Afrikaans|Afro-Asiatic|Albanian|Amharic|Ancient+Greek|Arabic|Aramaic|Armenian|Azerbaijani|Bambara|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Catalan%3B+Valencian|Celtic|Central+Khmer|Chamorro|Chinese|Choctaw|Church+Slavic|Chuukese|Cree|Creole|Creoles|Croatian|Czech|Danish|Dutch|Dyula|Efik|Elamite|Estonian|Ewe|Filipino|Finnish|French|Fulah|Georgian|German|Germanic|Greek|Gujarati|Haitian|Hausa|Hawaiian|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Inuktitut|Irish|Italian|Japanese|Javanese|Kannada|Karen|Kazakh|Kinyarwanda|Kirghiz|Korean|Kurdish|Latin|Latvian|Lingala|Lithuanian|Macedonian|Malay|Malayalam|Mandingo|Maori|Marathi|Middle+English|Mongolian|Mossi|Multiple|Navajo|Nepal+Bhasa|Nepali|Niger-Kordofanian|North+American+Indian|Norwegian|Nubian|Ojibwa|Old+English|Old+French|Pampanga|Panjabi|Pedi|Persian|Polish|Portuguese|Pushto|Romanian|Romany|Russian|Samoan|Sanskrit|Sign+Language|Slave|Slovak|Slovenian|Somali|Songhai|Spanish|Swahili|Swedish|Swiss+German|Tagalog|Tamashek|Tamil|Telugu|Thai|Tibetan|Tonga|Turkish|Ukrainian|Urdu|Uzbek|Vietnamese|Welsh|Wolof|Xhosa|Yiddish|Yoruba|Zande|Zaza|Zulu)/, NOT grouping_category:music',
+//			q: "title:hobbit",
+			q: "*:*",
+			fq: [ 
+//				fq: "language:/(English|None|Undetermined|Unknown)/",
+				"language:Spanish" ,
+				"NOT grouping_category:music"
+//				'language:/(Afrikaans|Afro-Asiatic|Albanian|Amharic|Ancient+Greek|Arabic|Aramaic|Armenian|Azerbaijani|Bambara|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Catalan%3B+Valencian|Celtic|Central+Khmer|Chamorro|Chinese|Choctaw|Church+Slavic|Chuukese|Cree|Creole|Creoles|Croatian|Czech|Danish|Dutch|Dyula|Efik|Elamite|Estonian|Ewe|Filipino|Finnish|French|Fulah|Georgian|German|Germanic|Greek|Gujarati|Haitian|Hausa|Hawaiian|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Inuktitut|Irish|Italian|Japanese|Javanese|Kannada|Karen|Kazakh|Kinyarwanda|Kirghiz|Korean|Kurdish|Latin|Latvian|Lingala|Lithuanian|Macedonian|Malay|Malayalam|Mandingo|Maori|Marathi|Middle+English|Mongolian|Mossi|Multiple|Navajo|Nepal+Bhasa|Nepali|Niger-Kordofanian|North+American+Indian|Norwegian|Nubian|Ojibwa|Old+English|Old+French|Pampanga|Panjabi|Pedi|Persian|Polish|Portuguese|Pushto|Romanian|Romany|Russian|Samoan|Sanskrit|Sign+Language|Slave|Slovak|Slovenian|Somali|Songhai|Spanish|Swahili|Swedish|Swiss+German|Tagalog|Tamashek|Tamil|Telugu|Thai|Tibetan|Tonga|Turkish|Ukrainian|Urdu|Uzbek|Vietnamese|Welsh|Wolof|Xhosa|Yiddish|Yoruba|Zande|Zaza|Zulu)/, NOT grouping_category:music'
+			],
+//			fq: "language:/(English|None|Undetermined|Unknown)/,language:/(Spanish)/",
+//				'language:/(Afrikaans|Afro-Asiatic|Albanian|Amharic|Ancient+Greek|Arabic|Aramaic|Armenian|Azerbaijani|Bambara|Basque|Bengali|Bosnian|Breton|Bulgarian|Burmese|Catalan|Catalan%3B+Valencian|Celtic|Central+Khmer|Chamorro|Chinese|Choctaw|Church+Slavic|Chuukese|Cree|Creole|Creoles|Croatian|Czech|Danish|Dutch|Dyula|Efik|Elamite|Estonian|Ewe|Filipino|Finnish|French|Fulah|Georgian|German|Germanic|Greek|Gujarati|Haitian|Hausa|Hawaiian|Hebrew|Hindi|Hungarian|Icelandic|Indonesian|Inuktitut|Irish|Italian|Japanese|Javanese|Kannada|Karen|Kazakh|Kinyarwanda|Kirghiz|Korean|Kurdish|Latin|Latvian|Lingala|Lithuanian|Macedonian|Malay|Malayalam|Mandingo|Maori|Marathi|Middle+English|Mongolian|Mossi|Multiple|Navajo|Nepal+Bhasa|Nepali|Niger-Kordofanian|North+American+Indian|Norwegian|Nubian|Ojibwa|Old+English|Old+French|Pampanga|Panjabi|Pedi|Persian|Polish|Portuguese|Pushto|Romanian|Romany|Russian|Samoan|Sanskrit|Sign+Language|Slave|Slovak|Slovenian|Somali|Songhai|Spanish|Swahili|Swedish|Swiss+German|Tagalog|Tamashek|Tamil|Telugu|Thai|Tibetan|Tonga|Turkish|Ukrainian|Urdu|Uzbek|Vietnamese|Welsh|Wolof|Xhosa|Yiddish|Yoruba|Zande|Zaza|Zulu)/, NOT grouping_category:music'
+			rows: '1000',
+			fl: 'id,title,record_details',
+			wt: 'json',
+			indent: 'true'
+		}
+	})
+	.then(function (response) {
+		console.log(response.request.path);
+		console.log(response.data.response.numFound);
+		db.insert(response.data.response.docs, function (err, newDocs) {
+		})
+		db.find({}, function (err, docs) {
+			docs.forEach(function (g, h) {
+				if (g.record_details.length > 1) {
+					const gid = g.id;
+					const title = g.title.trim().replace(/["']/g,'');
+					g.record_details.forEach(function (b, c) {
+						const bib = b.split("|");
+						const [bsource, bid] = bib[0].split(":",2);
+						const blang = bib[4];
+						if (blang != "English") {
+// WHAT pika user? or connect more directly to mariadb? create "config.pwd.ini" file, but json :)
+// POST params source, recordid, notes
+							const sql = 'INSERT INTO vufind.nongrouped_records (source,recordId,notes) '
+								+ 'VALUES ("' + bsource + '","' + bid + '","LANGUAGE: ' + title + ' [' + blang + ']") '
+								+ 'ON DUPLICATE KEY UPDATE '
+								+ 'source = "' + bsource + '", '
+								+ 'recordId = "' + bid + '", '
+								+ 'notes = "LANGUAGE: ' + title + ' [' + blang + ']";';
+							console.log(sql);
+						}
+					})
+				}
+		})
+		})
+	})
+	.catch(function (error) {
 		console.log(error);
+	})
+	.then(function () {
+		console.log('\n\nall done\n\n');
 	});
+
+*/
+
