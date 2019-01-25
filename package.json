@@ -10,5 +10,8 @@
     "Pika"
   ],
   "author": "James Staub <james.staub@nashville.gov>",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "solr-client": "^0.7.0"
+  }
 }
