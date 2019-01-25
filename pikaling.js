@@ -47,7 +47,7 @@ client.search(query,function(err,obj){
 					// test record_details for more than one bib AND at least one bib with English
 					if (g.record_details.length > 1 && g.record_details.findIndex(b => b.includes('English')) != -1) {
 						const gid = g.id;
-						const title = g.title.trim().replace(/["']/g,'').toString('utf-8');
+						const title = g.title.trim().replace(/["']/g,'').normalize('NFKC');
 						g.record_details.forEach(function (b, c) {
 							const bib = b.split("|");
 							const [bsource, bid] = bib[0].split(":",2);
