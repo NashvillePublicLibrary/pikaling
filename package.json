@@ -12,6 +12,8 @@
   "author": "James Staub <james.staub@nashville.gov>",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^6.2.0",
+    "mariadb": "^2.0.3",
     "solr-client": "^0.7.0"
   }
 }
