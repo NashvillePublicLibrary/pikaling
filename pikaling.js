@@ -2,20 +2,20 @@ const result = require('dotenv').config();
 
 const mariadb = require('mariadb');
 const pool = mariadb.createPool({
-	socketPath: process.env.DB_SOCKETPATH
-//     host: process.env.DB_HOST, 
-//     user: process.env.DB_USER, 
-//     password: process.env.DB_PASSWORD,
-//     ssl: process.env.DB_SSL,
-//     database: process.env.DB_DATABASE,
-//     connectionLimit: process.env.DB_CONNECTIONLIMIT
+//	socketPath: process.env.DB_SOCKETPATH
+     host: process.env.DB_HOST, 
+     user: process.env.DB_USER, 
+     password: process.env.DB_PASSWORD,
+     ssl: process.env.DB_SSL,
+     database: process.env.DB_DATABASE,
+     connectionLimit: process.env.DB_CONNECTIONLIMIT
 });
 
 var solr = require('solr-client');
 var client = solr.createClient({
-	host: 'galacto.library.nashville.org',
-	port: '8180',
-	core: 'grouped',
+	host: process.env.SOLR_HOST,
+	port: process.env.SOLR_PORT,
+	core: process.env.SOLR_CORE
 });
 
 var query = client.createQuery()
@@ -72,6 +72,7 @@ client.search(query,function(err,obj){
 									+ 'source = "' + bsource + '", '
 									+ 'recordId = "' + bid + '", '
 									+ 'notes = "LANGUAGE: ' + title + ' [' + blang + ']";';
+//								console.log(sql);
 								asyncMariaDBInsert(sql);
 							}
 						})
@@ -80,18 +81,23 @@ client.search(query,function(err,obj){
 			}
 		});
 	}
+	pool.end()
+		.then(() => {
+			//connections have been ended properly
+		})
+	.catch(err => {});
 });
 
 async function asyncMariaDBInsert(sql) {
-  let conn;
-  try {
-	conn = await pool.getConnection();
-	const result = await conn.query(sql, [1, "mariadb"]);
-	console.log(res); 
-
-  } catch (err) {
-	throw err;
-  } finally {
-	if (conn) return conn.end();
-  }
+	let conn;
+	try {
+		console.log(sql);
+		conn = await pool.getConnection();
+		const result = await conn.query(sql, [1, "mariadb"]);
+		console.log(result); 
+	} catch (err) {
+		throw err;
+	} finally {
+		if (conn) return conn.end();
+	}
 }
