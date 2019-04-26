@@ -68,24 +68,24 @@ async function getDocs(client, languages) {
 }
 
 async function mariadbInsert(sqls) {
-	try {
-		const conn = await mariadb.createConnection({
-			host: process.env.DB_HOST,
-			user: process.env.DB_USER,
-			password: process.env.DB_PASSWORD,
-			ssl: process.env.DB_SSL,
-			database: process.env.DB_DATABASE,
-			connectionLimit: process.env.DB_CONNECTIONLIMIT
-		});
-		sqls.forEach(async function (sql,i) {
-			console.log(sql);
+	sqls.forEach(async function (sql,i) {
+		try {
+			const conn = await mariadb.createConnection({
+				host: process.env.DB_HOST,
+				user: process.env.DB_USER,
+				password: process.env.DB_PASSWORD,
+				ssl: process.env.DB_SSL,
+				database: process.env.DB_DATABASE,
+				connectionLimit: process.env.DB_CONNECTIONLIMIT
+			});
 			const result = await conn.query(sql);
-			console.log(result);
-		});
-		conn.end();
-	} catch (err) {
-		throw err;
-	}
+			console.log(sql + JSON.stringify(result));
+			conn.end();
+		} catch (err) {
+			throw err;
+		}
+	});
+
 }
 
 async function ungroup(client) {
